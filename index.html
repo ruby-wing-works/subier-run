@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>はしれ！スービエ</title>
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@800&display=swap" rel="stylesheet">
+    <style>
+        body { 
+            margin: 0; 
+            padding: 10px; 
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            /* 海をイメージした深海のグラデーションと、右下のキャラ画像 */
+            background-image: url('titleback.png'), linear-gradient(to bottom, #0B2033, #1F4E79, #3A83C2);
+            background-repeat: no-repeat, no-repeat;
+            background-position: right bottom, center center;
+            background-size: 25% auto, cover;
+            font-family: 'M PLUS Rounded 1c', sans-serif;
+            overflow: hidden;
+        }
+        
+        #main-title {
+            font-size: 56px;
+            color: #ffffff;
+            /* スービエの青系統カラーを取り入れた光る装飾 */
+            text-shadow: 0 0 10px #3498db, 0 0 20px #2980b9, 3px 3px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000;
+            letter-spacing: 4px;
+            margin: 20px 0 0 0; /* ゲーム画面の下に配置するためmarginを上に変更 */
+            transform: rotate(-2deg);
+            z-index: 10;
+        }
+
+        #game { 
+            width: 100%; 
+            max-width: 800px; 
+            height: 260px; 
+            /* 枠を太くしてゲーム機・アーケード感を強調 */
+            border: 8px solid #34495e; 
+            border-radius: 12px;
+            position: relative; 
+            overflow: hidden; 
+            background-color: rgb(135, 206, 235); /* 初期は昼の色 */
+            transition: background-color 0.5s linear; /* 背景色変化を滑らかに */
+            box-shadow: 0 15px 35px rgba(0,0,0,0.8);
+        }
+        
+        /* 地面 */
+        #ground {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 30px;
+            background: #795548; 
+            border-top: 6px solid #8BC34A; 
+            box-sizing: border-box;
+            z-index: 5;
+        }
+        
+        /* プレイヤー */
+        #player { 
+            width: 80px; 
+            height: 80px; 
+            position: absolute; 
+            left: 50px; 
+            object-fit: contain;
+            z-index: 10;
+        }
+        
+        /* 障害物 */
+        .obstacle { 
+            width: 80px; 
+            height: 80px; 
+            position: absolute; 
+            object-fit: contain;
+            z-index: 10;
+        }
+        
+        /* 野菜アイテム */
+        .veggie {
+            width: 50px;
+            height: 50px;
+            position: absolute;
+            object-fit: contain;
+            z-index: 10;
+            /* 絵文字の周りに細い黒フチを付けて視認性を上げる */
+            filter: drop-shadow(1px 1px 0 #000) drop-shadow(-1px -1px 0 #000) drop-shadow(1px -1px 0 #000) drop-shadow(-1px 1px 0 #000);
+        }
+
+        /* 雲 */
+        .cloud {
+            position: absolute;
+            object-fit: contain;
+            z-index: 1; /* プレイヤーや障害物より奥 */
+            opacity: 0.8;
+            mix-blend-mode: screen; /* 黒背景を透過させるため */
+        }
+
+        /* スコア */
+        #score { 
+            font-family: 'M PLUS Rounded 1c', sans-serif; 
+            font-weight: 800;
+            font-size: 24px; 
+            color: white; 
+            text-shadow: 2px 2px 0 #333, -1px -1px 0 #333, 1px -1px 0 #333, -1px 1px 0 #333, 1px 1px 0 #333; 
+            position: absolute; 
+            top: 10px; 
+            right: 20px; 
+            z-index: 20; 
+        }
+
+        /* ポーズボタン */
+        #pause-btn {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 20;
+            font-size: 24px;
+            background: rgba(0, 0, 0, 0.4);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 5px 10px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        #pause-btn:hover { background: rgba(0, 0, 0, 0.7); }
+
+        /* 野菜ゲージ (無敵用) - 中央に配置 */
+        #veggie-gauge {
+            position: absolute;
+            top: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 20;
+            display: flex;
+            gap: 5px;
+        }
+        .slot {
+            width: 30px;
+            height: 30px;
+            background-color: rgba(0,0,0,0.5);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 18px;
+            border: 2px solid white;
+            box-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+        }
+
+        /* 無敵残り時間ゲージ */
+        #invincible-gauge {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 200px;
+            height: 20px;
+            background: rgba(0,0,0,0.5);
+            border: 2px solid white;
+            border-radius: 10px;
+            z-index: 20;
+            overflow: hidden;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+        #invincible-bar {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000);
+            background-size: 200% 100%;
+            animation: rainbowBG 1s linear infinite;
+            transform-origin: left;
+        }
+        @keyframes rainbowBG {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 100% 50%; }
+        }
+
+        /* 無敵モードの虹色エフェクト */
+        .invincible {
+            animation: rainbow 0.3s linear infinite;
+        }
+        @keyframes rainbow {
+            0% { filter: hue-rotate(0deg) saturate(3) brightness(1.2); }
+            50% { filter: hue-rotate(180deg) saturate(3) brightness(1.5); }
+            100% { filter: hue-rotate(360deg) saturate(3) brightness(1.2); }
+        }
+
+        /* 障害物が吹き飛ぶエフェクト */
+        .blown-away {
+            animation: blowAway 0.5s forwards;
+        }
+        @keyframes blowAway {
+            0% { transform: translate(0, 0) rotate(0deg); opacity: 1; }
+            100% { transform: translate(100px, -200px) rotate(360deg); opacity: 0; }
+        }
+
+        /* 無敵延長の明確なフラッシュ演出 */
+        .extend-flash {
+            filter: brightness(2) drop-shadow(0 0 15px white) !important;
+            transform: scale(1.3);
+            transition: all 0.1s ease-out;
+        }
+
+        /* オーバーレイ (スタート画面・ゲームオーバー画面・ポーズ画面) */
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 30;
+            color: white;
+            text-align: center;
+        }
+        .overlay h1 {
+            margin: 0 0 20px 0;
+            font-size: 32px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+        }
+        .overlay p {
+            font-size: 16px;
+            margin-bottom: 30px;
+            line-height: 1.5;
+        }
+        .btn {
+            padding: 10px 30px;
+            font-size: 20px;
+            font-weight: bold;
+            color: white;
+            background-color: #e74c3c;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            transition: background-color 0.2s, transform 0.1s;
+        }
+        .btn:hover { background-color: #c0392b; }
+        .btn:active { transform: translateY(2px); box-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+
+        #final-score {
+            font-size: 24px;
+            font-weight: bold;
+            color: #85c1e9; /* トンマナに合わせた青系統 */
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div id="game">
+        <button id="pause-btn">⏸</button>
+        <div id="score">Score: 0</div>
+        
+        <!-- 野菜ゲージ -->
+        <div id="veggie-gauge">
+            <div class="slot" id="slot-0"></div>
+            <div class="slot" id="slot-1"></div>
+            <div class="slot" id="slot-2"></div>
+            <div class="slot" id="slot-3"></div>
+            <div class="slot" id="slot-4"></div>
+        </div>
+
+        <!-- 無敵残り時間ゲージ -->
+        <div id="invincible-gauge" style="display: none;">
+            <div id="invincible-bar"></div>
+        </div>
+
+        <div id="ground"></div>
+        <img id="player" src="run1.png" alt="player">
+
+        <!-- スタート画面 -->
+        <div id="start-screen" class="overlay">
+            <p style="font-size: 20px;">画面クリック / Spaceキー で開始<br><br>
+            <span style="font-size: 14px; color: #ccc;">※ プレイ中は Esc / P / ⏸ボタン で一時停止</span></p>
+        </div>
+
+        <!-- ポーズ画面 -->
+        <div id="pause-screen" class="overlay" style="display: none;">
+            <h1>PAUSE</h1>
+            <p>画面クリック / Space / Esc / Pキー で再開</p>
+        </div>
+
+        <!-- ゲームオーバー画面 -->
+        <div id="game-over-screen" class="overlay" style="display: none;">
+            <h1>GAME OVER</h1>
+            <div id="final-score">Score: 0</div>
+            <button id="retry-btn" class="btn">もう一度遊ぶ</button>
+        </div>
+    </div>
+    <h1 id="main-title">はしれ！スービエ</h1>
+
+<script>
+    const game = document.getElementById("game");
+    const player = document.getElementById("player");
+    const scoreElement = document.getElementById("score");
+    const startScreen = document.getElementById("start-screen");
+    const pauseScreen = document.getElementById("pause-screen");
+    const gameOverScreen = document.getElementById("game-over-screen");
+    const finalScoreElement = document.getElementById("final-score");
+    const retryBtn = document.getElementById("retry-btn");
+    const pauseBtn = document.getElementById("pause-btn");
+    const invincibleBar = document.getElementById("invincible-bar");
+    const veggieGauge = document.getElementById("veggie-gauge");
+    const invincibleGauge = document.getElementById("invincible-gauge");
+    
+    // ====================================================
+    // 画像設定
+    // ====================================================
+    const PLAYER_RUN_IMAGES = ['run1.png', 'run2.png'];
+    const JUMP_UP_IMAGE = 'jump1.png';
+    const JUMP_DOWN_IMAGE = 'jump2.png';
+    
+    // 障害物を2種に減らす
+    const GROUND_OBSTACLE_COUNT = 2; 
+    const FLYING_OBSTACLE_COUNT = 2; 
+    const CLOUD_COUNT = 2; 
+
+    const GROUND_OBSTACLE_IMAGES = [];
+    for (let i = 1; i <= GROUND_OBSTACLE_COUNT; i++) {
+        GROUND_OBSTACLE_IMAGES.push(`placeholder${i}.png`);
+    }
+
+    const FLYING_OBSTACLE_IMAGES = [];
+    for (let i = 1; i <= FLYING_OBSTACLE_COUNT; i++) {
+        FLYING_OBSTACLE_IMAGES.push(`placeholder-fly${i}.png`);
+    }
+
+    const CLOUD_IMAGES = [];
+    for (let i = 1; i <= CLOUD_COUNT; i++) {
+        CLOUD_IMAGES.push(`placeholder-cloud${i}.png`);
+    }
+
+    // 野菜アイテムの設定
+    const getEmojiSvg = (emoji) => `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text x="50%" y="50%" dominant-baseline="central" text-anchor="middle" font-size="80">${emoji}</text></svg>`;
+    const VEGGIES_CONFIG = [
+        { name: 'eggplant', emoji: '🍆' },
+        { name: 'tomato', emoji: '🍅' },
+        { name: 'pepper', emoji: '🫑' },
+        { name: 'apple', emoji: '🍎' },
+        { name: 'carrot', emoji: '🥕' }
+    ];
+    // ====================================================
+
+    // ステート: 'START', 'PLAYING', 'GAMEOVER', 'PAUSED'
+    let gameState = 'START';
+    
+    let score = 0;
+    let isJumping = false;
+    let playerY = 0; 
+    let playerVelocityY = 0;
+    
+    const gravity = -0.7;   
+    const jumpPower = 13;   
+    const GROUND_HEIGHT = 30; 
+    
+    let runFrame = 0;
+    let animationTimer = 0;
+    
+    let obstacles = [];
+    let spawnTimer = 0;
+    let gameSpeed = 6;      
+
+    let clouds = [];
+    let cloudSpawnTimer = 0;
+
+    let items = [];
+    let itemSpawnTimer = 100;
+    
+    // 無敵モード管理
+    let vegetableCount = 0;
+    let invincibleTimer = 0;
+    const INVINCIBLE_MAX_TIME = 360; // 60fps * 6 seconds
+
+    // 時間帯変化の色設定
+    const SKY_COLORS = [
+        { score: 0, r: 135, g: 206, b: 235 },
+        { score: 300, r: 255, g: 140, b: 0 },
+        { score: 600, r: 10, g: 10, b: 60 },
+        { score: 900, r: 255, g: 182, b: 193 },
+        { score: 1200, r: 135, g: 206, b: 235 }
+    ];
+
+    player.style.bottom = GROUND_HEIGHT + "px";
+
+    function updateSkyColor() {
+        const cycleLength = 1200;
+        let currentScore = score % cycleLength;
+        
+        let colorStart = SKY_COLORS[0];
+        let colorEnd = SKY_COLORS[1];
+
+        for (let i = 0; i < SKY_COLORS.length - 1; i++) {
+            if (currentScore >= SKY_COLORS[i].score && currentScore < SKY_COLORS[i+1].score) {
+                colorStart = SKY_COLORS[i];
+                colorEnd = SKY_COLORS[i+1];
+                break;
+            }
+        }
+
+        const range = colorEnd.score - colorStart.score;
+        const progress = (currentScore - colorStart.score) / range;
+
+        const r = Math.floor(colorStart.r + (colorEnd.r - colorStart.r) * progress);
+        const g = Math.floor(colorStart.g + (colorEnd.g - colorStart.g) * progress);
+        const b = Math.floor(colorStart.b + (colorEnd.b - colorStart.b) * progress);
+
+        game.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
+    }
+
+    function updateGaugeUI(newEmoji = null) {
+        for (let i = 0; i < 5; i++) {
+            const slot = document.getElementById(`slot-${i}`);
+            if (i < vegetableCount) {
+                if (i === vegetableCount - 1 && newEmoji) {
+                    slot.innerText = newEmoji;
+                }
+            } else {
+                slot.innerText = "";
+            }
+        }
+    }
+
+    function togglePause() {
+        if (gameState === 'PLAYING') {
+            gameState = 'PAUSED';
+            pauseScreen.style.display = 'flex';
+        } else if (gameState === 'PAUSED') {
+            gameState = 'PLAYING';
+            pauseScreen.style.display = 'none';
+            requestAnimationFrame(gameLoop);
+        }
+    }
+
+    function resetGame() {
+        score = 0;
+        gameSpeed = 6;
+        spawnTimer = 0;
+        cloudSpawnTimer = 0;
+        itemSpawnTimer = 100;
+        playerY = 0;
+        playerVelocityY = 0;
+        isJumping = false;
+        
+        vegetableCount = 0;
+        invincibleTimer = 0;
+        player.classList.remove('invincible');
+        updateGaugeUI();
+        
+        veggieGauge.style.display = 'flex';
+        invincibleGauge.style.display = 'none';
+
+        scoreElement.innerText = "Score: 0";
+        player.style.bottom = GROUND_HEIGHT + "px";
+        player.src = PLAYER_RUN_IMAGES[0];
+        updateSkyColor();
+
+        obstacles.forEach(obs => obs.remove());
+        obstacles = [];
+        clouds.forEach(c => c.remove());
+        clouds = [];
+        items.forEach(it => it.remove());
+        items = [];
+
+        gameOverScreen.style.display = "none";
+        startScreen.style.display = "none";
+        pauseScreen.style.display = "none";
+        gameState = 'PLAYING';
+        
+        requestAnimationFrame(gameLoop);
+    }
+
+    function gameOver() {
+        gameState = 'GAMEOVER';
+        finalScoreElement.innerText = "Final Score: " + Math.floor(score);
+        gameOverScreen.style.display = "flex";
+    }
+
+    function handleInput() {
+        if (gameState === 'START') {
+            resetGame();
+        } else if (gameState === 'PLAYING') {
+            if (!isJumping) {
+                isJumping = true;
+                playerVelocityY = jumpPower;
+                runFrame = 0;
+                animationTimer = 0;
+                player.src = JUMP_UP_IMAGE;
+            }
+        } else if (gameState === 'PAUSED') {
+            togglePause();
+        }
+    }
+
+    document.addEventListener('keydown', function(event) {
+        // ゲームオーバー時はEnterキーでもリトライ可能に
+        if (gameState === 'GAMEOVER' && event.code === 'Enter') {
+            event.preventDefault();
+            resetGame();
+            return;
+        }
+
+        if (event.code === 'Space' || event.code === 'ArrowUp') {
+            event.preventDefault();
+            handleInput();
+        } else if (event.code === 'KeyP' || event.key === 'p' || event.key === 'P' || event.code === 'Escape' || event.key === 'Escape') {
+            if (gameState === 'PLAYING' || gameState === 'PAUSED') togglePause();
+        }
+    });
+    
+    document.addEventListener('mousedown', function(event) {
+        if (event.target.id === 'retry-btn' || event.target.id === 'pause-btn') return;
+        handleInput();
+    });
+    document.addEventListener('touchstart', function(event) {
+        if (event.target.id === 'retry-btn' || event.target.id === 'pause-btn') return;
+        handleInput();
+    });
+
+    retryBtn.addEventListener('click', function() {
+        if(gameState === 'GAMEOVER') resetGame();
+    });
+
+    pauseBtn.addEventListener('click', function() {
+        this.blur();
+        if (gameState === 'PLAYING' || gameState === 'PAUSED') togglePause();
+    });
+
+    function spawnCloud() {
+        const cloud = document.createElement("img");
+        cloud.classList.add("cloud");
+        
+        const randomImage = CLOUD_IMAGES[Math.floor(Math.random() * CLOUD_IMAGES.length)];
+        cloud.src = randomImage;
+        
+        const height = 120 + Math.random() * 100;
+        cloud.style.bottom = height + "px";
+        
+        const size = 60 + Math.random() * 60;
+        cloud.style.width = size + "px";
+        cloud.style.height = (size * 0.6) + "px";
+        
+        cloud.dataset.x = game.clientWidth;
+        cloud.style.left = cloud.dataset.x + "px";
+        
+        game.appendChild(cloud);
+        clouds.push(cloud);
+    }
+
+    function spawnObstacle() {
+        // 現在画面に出ている画像の名前リストを取得（重複出現防止のため）
+        let activeImages = obstacles.map(obs => {
+            const parts = obs.src.split('/');
+            return parts[parts.length - 1];
+        });
+
+        // 画面に出ていないものだけを候補にする
+        let availableGround = GROUND_OBSTACLE_IMAGES.filter(img => !activeImages.includes(img));
+        let availableFlying = FLYING_OBSTACLE_IMAGES.filter(img => !activeImages.includes(img));
+
+        let isFlying = Math.random() < 0.3; 
+        
+        // 候補が空の場合はもう一方に切り替える
+        if (isFlying && availableFlying.length === 0) isFlying = false;
+        if (!isFlying && availableGround.length === 0) isFlying = true;
+
+        let imgArray = isFlying ? availableFlying : availableGround;
+
+        // 全種類のキャラが画面にいるなど、これ以上出せない場合はキャンセル
+        if (imgArray.length === 0) {
+            return false; 
+        }
+
+        let randomImage = imgArray[Math.floor(Math.random() * imgArray.length)];
+        
+        const obs = document.createElement("img");
+        obs.classList.add("obstacle");
+        obs.src = randomImage;
+        
+        if (isFlying) {
+            obs.dataset.y = 80; 
+        } else {
+            obs.dataset.y = 0;  
+        }
+        
+        obs.style.bottom = (parseFloat(obs.dataset.y) + GROUND_HEIGHT) + "px";
+        obs.dataset.x = game.clientWidth;
+        obs.style.left = obs.dataset.x + "px";
+        
+        game.appendChild(obs);
+        obstacles.push(obs);
+        return true;
+    }
+
+    function spawnVeggie() {
+        const item = document.createElement("img");
+        item.classList.add("veggie");
+        
+        const randomVeggie = VEGGIES_CONFIG[Math.floor(Math.random() * VEGGIES_CONFIG.length)];
+        item.src = getEmojiSvg(randomVeggie.emoji);
+        item.dataset.emoji = randomVeggie.emoji;
+        
+        const height = 30 + Math.random() * 80;
+        item.dataset.y = height;
+        
+        item.style.bottom = (height + GROUND_HEIGHT) + "px";
+        item.dataset.x = game.clientWidth;
+        item.style.left = item.dataset.x + "px";
+        
+        game.appendChild(item);
+        items.push(item);
+    }
+
+    function checkCollision(rect1, rect2, margin = 15) {
+        return (
+            rect1.left + margin < rect2.right - margin &&
+            rect1.right - margin > rect2.left + margin &&
+            rect1.top + margin < rect2.bottom - margin &&
+            rect1.bottom - margin > rect2.top + margin
+        );
+    }
+
+    function gameLoop() {
+        if (gameState !== 'PLAYING') return; 
+        
+        // --- プレイヤーの更新 ---
+        if (isJumping) {
+            playerY += playerVelocityY;
+            playerVelocityY += gravity;
+            
+            if (playerVelocityY > 0) {
+                player.src = JUMP_UP_IMAGE;
+            } else {
+                player.src = JUMP_DOWN_IMAGE;
+            }
+
+            if (playerY <= 0) {
+                playerY = 0;
+                isJumping = false;
+                playerVelocityY = 0;
+                runFrame = 0;
+                animationTimer = 0;
+                player.src = PLAYER_RUN_IMAGES[0]; 
+            }
+        } else {
+            animationTimer++;
+            if (animationTimer > 6) { 
+                runFrame = (runFrame + 1) % PLAYER_RUN_IMAGES.length;
+                player.src = PLAYER_RUN_IMAGES[runFrame];
+                animationTimer = 0;
+            }
+        }
+        player.style.bottom = (playerY + GROUND_HEIGHT) + "px";
+
+        // 無敵時間タイマーとゲージの更新
+        if (invincibleTimer > 0) {
+            invincibleTimer--;
+            
+            const percent = (invincibleTimer / INVINCIBLE_MAX_TIME) * 100;
+            invincibleBar.style.width = percent + "%";
+
+            if (invincibleTimer <= 0) {
+                player.classList.remove('invincible'); 
+                veggieGauge.style.display = 'flex';
+                invincibleGauge.style.display = 'none';
+            }
+        }
+
+        // --- 障害物の更新 ---
+        spawnTimer--;
+        if (spawnTimer <= 0) {
+            // 野菜と被らないかチェック（最低150pxの隙間を確保）
+            let canSpawn = true;
+            for (let item of items) {
+                if (parseFloat(item.dataset.x) > game.clientWidth - 150) {
+                    canSpawn = false;
+                    break;
+                }
+            }
+            if (canSpawn) {
+                let spawned = spawnObstacle();
+                if (spawned) {
+                    // スコアが300（夕方）を超えてから、徐々に連続出現率を上げる (最大30%)
+                    let comboChance = Math.min(0.3, Math.max(0, (score - 300) / 2000));
+                    if (Math.random() < comboChance) {
+                        spawnTimer = 35 + Math.random() * 15; // 短い間隔
+                    } else {
+                        spawnTimer = 70 + Math.random() * (130 - (gameSpeed * 2)); 
+                        if (spawnTimer < 45) spawnTimer = 45; 
+                    }
+                } else {
+                    // キャラ不足でスポーンできなかった場合は少し待機
+                    spawnTimer = 20; 
+                }
+            }
+        }
+
+        const playerRect = player.getBoundingClientRect();
+
+        for (let i = obstacles.length - 1; i >= 0; i--) {
+            let obs = obstacles[i];
+            
+            if (obs.classList.contains('blown-away')) {
+                continue;
+            }
+
+            let x = parseFloat(obs.dataset.x);
+            x -= gameSpeed;
+            obs.dataset.x = x;
+            obs.style.left = x + "px";
+
+            const obsRect = obs.getBoundingClientRect();
+            if (checkCollision(playerRect, obsRect)) {
+                if (invincibleTimer > 0) {
+                    obs.classList.add('blown-away');
+                    setTimeout(() => obs.remove(), 500); 
+                    obstacles.splice(i, 1);
+                    score += 10; 
+                } else {
+                    gameOver();
+                    return; 
+                }
+            } else if (x + 80 < 0) {
+                obs.remove();
+                obstacles.splice(i, 1);
+            }
+        }
+
+        // --- 野菜アイテムの更新 ---
+        itemSpawnTimer--;
+        if (itemSpawnTimer <= 0) {
+            // 障害物と被らないかチェック（最低150pxの隙間を確保）
+            let canSpawn = true;
+            for (let obs of obstacles) {
+                if (parseFloat(obs.dataset.x) > game.clientWidth - 150) {
+                    canSpawn = false;
+                    break;
+                }
+            }
+            if (canSpawn) {
+                spawnVeggie();
+                itemSpawnTimer = 150 + Math.random() * 150; 
+            }
+        }
+
+        for (let i = items.length - 1; i >= 0; i--) {
+            let item = items[i];
+            let x = parseFloat(item.dataset.x);
+            
+            x -= gameSpeed;
+            item.dataset.x = x;
+            item.style.left = x + "px";
+
+            const itemRect = item.getBoundingClientRect();
+            if (checkCollision(playerRect, itemRect, 5)) {
+                score += 5; 
+                
+                if (invincibleTimer > 0) {
+                    // 無敵中の延長ボーナス (1秒=60フレーム延長)
+                    invincibleTimer += 60;
+                    if (invincibleTimer > INVINCIBLE_MAX_TIME) {
+                        invincibleTimer = INVINCIBLE_MAX_TIME;
+                    }
+                    // ピカッとさせる演出（明確なフラッシュクラスを追加）
+                    player.classList.add('extend-flash');
+                    setTimeout(() => {
+                        player.classList.remove('extend-flash');
+                    }, 150);
+                } else if (vegetableCount < 5) {
+                    vegetableCount++;
+                    updateGaugeUI(item.dataset.emoji);
+                    
+                    if (vegetableCount >= 5) {
+                        invincibleTimer = INVINCIBLE_MAX_TIME; 
+                        vegetableCount = 0; 
+                        
+                        updateGaugeUI(); 
+                        veggieGauge.style.display = 'none';
+                        invincibleGauge.style.display = 'block';
+                        invincibleBar.style.width = "100%";
+                        
+                        player.classList.add('invincible');
+                    }
+                }
+                item.remove();
+                items.splice(i, 1);
+            } else if (x + 50 < 0) {
+                item.remove();
+                items.splice(i, 1);
+            }
+        }
+
+        // --- 雲の更新 ---
+        cloudSpawnTimer--;
+        if (cloudSpawnTimer <= 0) {
+            spawnCloud();
+            cloudSpawnTimer = 150 + Math.random() * 200; 
+        }
+
+        for (let i = clouds.length - 1; i >= 0; i--) {
+            let cloud = clouds[i];
+            let x = parseFloat(cloud.dataset.x);
+            
+            x -= gameSpeed * 0.3;
+            cloud.dataset.x = x;
+            cloud.style.left = x + "px";
+
+            if (x + 120 < 0) {
+                cloud.remove();
+                clouds.splice(i, 1);
+            }
+        }
+
+        // --- スコア・難易度更新 ---
+        score += 0.05;
+        scoreElement.innerText = "Score: " + Math.floor(score);
+        updateSkyColor(); 
+        
+        // 最大スピードを10に制限し、ある程度で難易度が天井になるように
+        if (score % 100 < 0.05 && gameSpeed < 10) {
+             gameSpeed += 0.2;
+        }
+
+        requestAnimationFrame(gameLoop);
+    }
+
+    player.src = PLAYER_RUN_IMAGES[0];
+    updateSkyColor(); 
+    updateGaugeUI(); 
+
+</script>
+</body>
+</html>
