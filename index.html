@@ -506,7 +506,17 @@
         gameOverScreen.style.display = "flex";
     }
 
-    function handleInput() {
+    let lastTouchTime = 0;
+
+    function handleInput(event) {
+        if (event && event.type === 'touchstart') {
+            lastTouchTime = Date.now();
+        }
+        // スマホ特有のゴーストクリック（touchstart直後に遅れて発火するmousedown）を防止
+        if (event && event.type === 'mousedown') {
+            if (Date.now() - lastTouchTime < 500) return;
+        }
+
         if (gameState === 'START') {
             resetGame();
         } else if (gameState === 'PLAYING') {
@@ -532,7 +542,7 @@
 
         if (event.code === 'Space' || event.code === 'ArrowUp') {
             event.preventDefault();
-            handleInput();
+            handleInput(event);
         } else if (event.code === 'KeyP' || event.key === 'p' || event.key === 'P' || event.code === 'Escape' || event.key === 'Escape') {
             if (gameState === 'PLAYING' || gameState === 'PAUSED') togglePause();
         }
@@ -540,11 +550,11 @@
     
     document.addEventListener('mousedown', function(event) {
         if (event.target.id === 'retry-btn' || event.target.id === 'pause-btn') return;
-        handleInput();
+        handleInput(event);
     });
     document.addEventListener('touchstart', function(event) {
         if (event.target.id === 'retry-btn' || event.target.id === 'pause-btn') return;
-        handleInput();
+        handleInput(event);
     });
 
     retryBtn.addEventListener('click', function() {
