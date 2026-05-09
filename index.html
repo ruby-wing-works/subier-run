@@ -7,7 +7,7 @@
     <style>
         body { 
             margin: 0; 
-            padding: 8vh 10px 10px 10px; /* インゲーム位置を上に固定（スマホで見やすく） */
+            padding: clamp(10px, 4vh, 30px) 10px 10px 10px; /* 上部余白を最適化して画面を広く使えるように */
             box-sizing: border-box;
             display: flex;
             flex-direction: column;
@@ -33,13 +33,22 @@
             }
         }
 
+        /* スマホの横画面（ランドスケープ）等、縦幅が狭い時の調整 */
+        @media screen and (orientation: landscape) and (max-height: 600px) {
+            body {
+                /* スービエがゲーム画面の裏に隠れて顔が見切れないように、画面下の隙間に収まるサイズに変更 */
+                background-position: right 5% bottom 0, center center;
+                background-size: auto 20vh, cover;
+            }
+        }
+
         #main-title {
             font-size: clamp(36px, 8vw, 56px); /* スマホ画面で文字がはみ出さないように調整 */
             color: #ffffff;
             /* スービエの青系統カラーを取り入れた光る装飾 */
             text-shadow: 0 0 10px #3498db, 0 0 20px #2980b9, 3px 3px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000;
             letter-spacing: 4px;
-            margin: 60px 0 0 0; /* ゲーム画面の下に配置 */
+            margin: 30px 0 0 0; /* ゲーム画面の下に配置（前回の半分程度に調整） */
             transform: rotate(-2deg);
             z-index: 10;
         }
@@ -47,7 +56,7 @@
         #game { 
             width: 100%; 
             max-width: 800px; 
-            height: 260px; 
+            height: 320px; /* ジャンプ見切れ防止とUI被り解消のため、空（上部）を60px拡張 */
             /* 枠を太くしてゲーム機・アーケード感を強調 */
             border: 8px solid #34495e; 
             border-radius: 12px;
@@ -567,7 +576,7 @@
         const randomImage = CLOUD_IMAGES[Math.floor(Math.random() * CLOUD_IMAGES.length)];
         cloud.src = randomImage;
         
-        const height = 120 + Math.random() * 100;
+        const height = 140 + Math.random() * 140; // 空が高くなったため出現位置を上へ分散
         cloud.style.bottom = height + "px";
         
         const size = 60 + Math.random() * 60;
