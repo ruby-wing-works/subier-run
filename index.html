@@ -13,7 +13,8 @@
             flex-direction: column;
             justify-content: flex-start; /* 中央揃えから上揃えに変更 */
             align-items: center;
-            height: 100vh;
+            height: 100vh; /* 古いブラウザ用のフォールバック */
+            height: 100dvh; /* スマホのURLバーを避ける動的な高さ指定 */
             /* 海をイメージした深海のグラデーションと、右下のキャラ画像 */
             background-image: url('titleback.png'), linear-gradient(to bottom, #0B2033, #1F4E79, #3A83C2);
             background-repeat: no-repeat, no-repeat;
@@ -21,6 +22,15 @@
             background-size: 25% auto, cover;
             font-family: 'M PLUS Rounded 1c', sans-serif;
             overflow: hidden;
+        }
+
+        /* スマホの縦画面（ポートレート）時専用の調整 */
+        @media screen and (orientation: portrait) {
+            body {
+                /* ブラウザバー被りを避けるため下から少し浮かせ、縦画面でも見栄えが良くなるようサイズを少し大きくする */
+                background-position: right 10px bottom 40px, center center;
+                background-size: 35% auto, cover;
+            }
         }
 
         #main-title {
