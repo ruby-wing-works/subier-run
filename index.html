@@ -90,7 +90,7 @@
             z-index: 10;
             /* 前傾姿勢を追加 */
             transform: rotate(15deg);
-            transition: transform 0.2s;
+            transition: transform 0.1s; /* フラッシュ演出に合わせて少し速くする */
         }
         
         /* 障害物 */
@@ -225,7 +225,7 @@
         /* 無敵延長の明確なフラッシュ演出 */
         .extend-flash {
             filter: brightness(2) drop-shadow(0 0 15px white) !important;
-            transform: rotate(15deg) scale(1.3);
+            transform: rotate(15deg) scale(1.3) !important;
             transition: all 0.1s ease-out;
         }
 
