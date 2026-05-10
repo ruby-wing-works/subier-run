@@ -88,6 +88,9 @@
             left: 50px; 
             object-fit: contain;
             z-index: 10;
+            /* 前傾姿勢を追加 */
+            transform: rotate(15deg);
+            transition: transform 0.2s;
         }
         
         /* 障害物 */
@@ -222,7 +225,7 @@
         /* 無敵延長の明確なフラッシュ演出 */
         .extend-flash {
             filter: brightness(2) drop-shadow(0 0 15px white) !important;
-            transform: scale(1.3);
+            transform: rotate(15deg) scale(1.3);
             transition: all 0.1s ease-out;
         }
 
@@ -337,7 +340,7 @@
     // ====================================================
     // 画像設定
     // ====================================================
-    const PLAYER_RUN_IMAGES = ['run1.png', 'run2.png'];
+    const PLAYER_RUN_IMAGES = ['run1.png', 'jump1.png', 'run2.png', 'jump1.png'];
     const JUMP_UP_IMAGE = 'jump1.png';
     const JUMP_DOWN_IMAGE = 'jump2.png';
     
@@ -697,7 +700,7 @@
             }
         } else {
             animationTimer++;
-            if (animationTimer > 6) { 
+            if (animationTimer > 4) { 
                 runFrame = (runFrame + 1) % PLAYER_RUN_IMAGES.length;
                 player.src = PLAYER_RUN_IMAGES[runFrame];
                 animationTimer = 0;
