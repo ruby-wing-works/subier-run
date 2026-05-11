@@ -218,14 +218,35 @@
             100% { background-position: 100% 50%; }
         }
 
-        /* 無敵モードの虹色エフェクト */
+        /* 無敵モードの虹色エフェクト（目に優しいスロー版） */
         .invincible {
-            animation: rainbow 0.3s linear infinite;
+            animation: rainbow 0.8s linear infinite;
         }
         @keyframes rainbow {
-            0% { filter: hue-rotate(0deg) saturate(3) brightness(1.2); }
-            50% { filter: hue-rotate(180deg) saturate(3) brightness(1.5); }
-            100% { filter: hue-rotate(360deg) saturate(3) brightness(1.2); }
+            0% { filter: hue-rotate(0deg) saturate(3) brightness(1.2) drop-shadow(0 0 10px gold); }
+            50% { filter: hue-rotate(180deg) saturate(3) brightness(1.5) drop-shadow(0 0 20px gold); }
+            100% { filter: hue-rotate(360deg) saturate(3) brightness(1.2) drop-shadow(0 0 10px gold); }
+        }
+
+        /* キラキラエフェクト用 */
+        .sparkle {
+            position: absolute;
+            pointer-events: none;
+            z-index: 15;
+            font-size: 24px;
+            /* 白い縁取りを追加して目立たせる */
+            text-shadow: 2px 2px 0 #fff, -2px -2px 0 #fff, 2px -2px 0 #fff, -2px 2px 0 #fff, 0 0 8px gold;
+            animation: sparkleUp 0.8s ease-out forwards;
+        }
+
+        @keyframes sparkleUp {
+            0% { transform: translateY(0) scale(1) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(-100px) scale(0) rotate(180deg); opacity: 0; }
+        }
+
+        /* ポーズ中にアニメーションを停止させる */
+        .paused * {
+            animation-play-state: paused !important;
         }
 
         /* 障害物が吹き飛ぶエフェクト */
@@ -482,12 +503,16 @@
     }
 
     function togglePause() {
+        if (gameState !== 'PLAYING' && gameState !== 'PAUSED') return;
+        
         if (gameState === 'PLAYING') {
             gameState = 'PAUSED';
-            pauseScreen.style.display = 'flex';
-        } else if (gameState === 'PAUSED') {
+            pauseScreen.style.display = "flex";
+            document.body.classList.add('paused'); // アニメーション停止用クラス
+        } else {
             gameState = 'PLAYING';
-            pauseScreen.style.display = 'none';
+            pauseScreen.style.display = "none";
+            document.body.classList.remove('paused');
             requestAnimationFrame(gameLoop);
         }
     }
@@ -518,6 +543,10 @@
 
         obstacles.forEach(obs => obs.remove());
         obstacles = [];
+        
+        // キラキラもリセット
+        document.querySelectorAll('.sparkle').forEach(s => s.remove());
+        
         clouds.forEach(c => c.remove());
         clouds = [];
         items.forEach(it => it.remove());
@@ -529,6 +558,28 @@
         gameState = 'PLAYING';
         
         requestAnimationFrame(gameLoop);
+    }
+
+    // キラキラ（✨）を生成する関数
+    function createSparkle() {
+        const sparkle = document.createElement('div');
+        sparkle.className = 'sparkle';
+        sparkle.innerText = Math.random() > 0.5 ? '✨' : '⭐';
+        
+        // プレイヤーの位置を取得
+        const pLeft = parseFloat(player.style.left) || 50;
+        const pBottom = parseFloat(player.style.bottom) || GROUND_HEIGHT;
+        
+        // プレイヤーの周りにランダム配置
+        sparkle.style.left = (pLeft + Math.random() * 60) + 'px';
+        sparkle.style.bottom = (pBottom + Math.random() * 60) + 'px';
+        
+        game.appendChild(sparkle);
+        
+        // アニメーションが実際に終わったら（ポーズ中は終わらない）要素を削除
+        sparkle.addEventListener('animationend', () => {
+            sparkle.remove();
+        });
     }
 
     function gameOver() {
@@ -739,6 +790,11 @@
         // 無敵時間タイマーとゲージの更新
         if (invincibleTimer > 0) {
             invincibleTimer--;
+            
+            // 無敵中にキラキラを生成
+            if (Math.random() < 0.15) {
+                createSparkle();
+            }
             
             const percent = (invincibleTimer / INVINCIBLE_MAX_TIME) * 100;
             invincibleBar.style.width = percent + "%";
