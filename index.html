@@ -164,8 +164,12 @@
             padding: 5px 10px;
             cursor: pointer;
             transition: background 0.2s;
+            -webkit-tap-highlight-color: transparent; /* スマホのタップハイライトを消す */
+            outline: none;
         }
-        #pause-btn:hover { background: rgba(0, 0, 0, 0.7); }
+        @media (hover: hover) {
+            #pause-btn:hover { background: rgba(0, 0, 0, 0.7); }
+        }
 
         /* おやさいゲージ (無敵用) - 中央に配置 */
         #veggie-gauge {
