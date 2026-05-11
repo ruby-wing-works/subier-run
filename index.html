@@ -2,6 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>はしれ！スービエ</title>
     <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@800&display=swap" rel="stylesheet">
     <style>
@@ -22,6 +23,17 @@
             background-size: 25% auto, cover;
             font-family: 'M PLUS Rounded 1c', sans-serif;
             overflow: hidden;
+            
+            /* 誤操作防止: テキスト選択とピンチズーム・ダブルタップズームを無効化 */
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: none;
+        }
+        
+        /* 画像のドラッグも禁止 */
+        img {
+            -webkit-user-drag: none;
+            user-drag: none;
         }
 
         /* スマホの縦画面（ポートレート）時専用の調整 */
@@ -102,7 +114,7 @@
             z-index: 10;
         }
         
-        /* 野菜アイテム */
+        /* おやさい */
         .veggie {
             width: 50px;
             height: 50px;
@@ -152,7 +164,7 @@
         }
         #pause-btn:hover { background: rgba(0, 0, 0, 0.7); }
 
-        /* 野菜ゲージ (無敵用) - 中央に配置 */
+        /* おやさいゲージ (無敵用) - 中央に配置 */
         #veggie-gauge {
             position: absolute;
             top: 15px;
@@ -284,7 +296,7 @@
         <button id="pause-btn">⏸</button>
         <div id="score">Score: 0</div>
         
-        <!-- 野菜ゲージ -->
+        <!-- おやさいゲージ -->
         <div id="veggie-gauge">
             <div class="slot" id="slot-0"></div>
             <div class="slot" id="slot-1"></div>
@@ -364,7 +376,7 @@
         CLOUD_IMAGES.push(`placeholder-cloud${i}.png`);
     }
 
-    // 野菜アイテムの設定
+    // おやさいラインナップ
     const getEmojiSvg = (emoji) => `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text x="50%" y="50%" dominant-baseline="central" text-anchor="middle" font-size="80">${emoji}</text></svg>`;
     const VEGGIES_CONFIG = [
         { name: 'eggplant', emoji: '🍆' },
@@ -725,7 +737,7 @@
         // --- 障害物の更新 ---
         spawnTimer--;
         if (spawnTimer <= 0) {
-            // 野菜と被らないかチェック（最低150pxの隙間を確保）
+            // おやさいと被らないかチェック（最低150pxの隙間を確保）
             let canSpawn = true;
             for (let item of items) {
                 if (parseFloat(item.dataset.x) > game.clientWidth - 150) {
@@ -782,7 +794,7 @@
             }
         }
 
-        // --- 野菜アイテムの更新 ---
+        // --- おやさいの更新 ---
         itemSpawnTimer--;
         if (itemSpawnTimer <= 0) {
             // 障害物と被らないかチェック（最低150pxの隙間を確保）
