@@ -502,9 +502,15 @@
         }
     }
 
+    let lastPauseTime = 0;
     function togglePause() {
         if (gameState !== 'PLAYING' && gameState !== 'PAUSED') return;
         
+        // 連打防止: 400ms以内の再操作を無視（スマホのクリック遅延対策）
+        const now = Date.now();
+        if (now - lastPauseTime < 400) return;
+        lastPauseTime = now;
+
         if (gameState === 'PLAYING') {
             gameState = 'PAUSED';
             pauseScreen.style.display = "flex";
