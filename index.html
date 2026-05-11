@@ -2,6 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>はしれ！スービエ</title>
     <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@800&display=swap" rel="stylesheet">
     <style>
@@ -22,6 +23,16 @@
             background-size: 25% auto, cover;
             font-family: 'M PLUS Rounded 1c', sans-serif;
             overflow: hidden;
+
+            /* テキスト選択を禁止 */
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        /* 画像のドラッグを禁止 */
+        img {
+            -webkit-user-drag: none;
+            user-drag: none;
         }
 
         /* スマホの縦画面（ポートレート）時専用の調整 */
@@ -65,6 +76,8 @@
             background-color: rgb(135, 206, 235); /* 初期は昼の色 */
             transition: background-color 0.5s linear; /* 背景色変化を滑らかに */
             box-shadow: 0 15px 35px rgba(0,0,0,0.8);
+            /* ダブルタップズームのみを抑制し、レイアウト崩れを防ぐ */
+            touch-action: manipulation;
         }
         
         /* 地面 */
@@ -882,8 +895,14 @@
 
     player.src = PLAYER_RUN_IMAGES[0];
     updateSkyColor(); 
-    updateGaugeUI(); 
+    updateGaugeUI();
 
+    // --- スマホでのピンチズームを禁止する (レイアウトを壊さないJS制御) ---
+    document.addEventListener('touchstart', (e) => {
+        if (e.touches.length > 1) {
+            e.preventDefault();
+        }
+    }, { passive: false });
 </script>
 </body>
 </html>
