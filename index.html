@@ -8,7 +8,7 @@
     <style>
         body { 
             margin: 0; 
-            padding: clamp(10px, 4vh, 30px) 10px 10px 10px; /* 上部余白を最適化して画面を広く使えるように */
+            padding: 8vh 15px 20px 15px; /* 元のゆったりした余白感に戻す */
             box-sizing: border-box;
             display: flex;
             flex-direction: column;
@@ -67,7 +67,7 @@
         #game { 
             width: 100%; 
             max-width: 800px; 
-            height: 320px; /* ジャンプ見切れ防止とUI被り解消のため、空（上部）を60px拡張 */
+            height: 280px; /* 見切れと圧迫感のバランスを取った高さ */
             /* 枠を太くしてゲーム機・アーケード感を強調 */
             border: 8px solid #34495e; 
             border-radius: 12px;
@@ -77,8 +77,8 @@
             transition: background-color 0.5s linear; /* 背景色変化を滑らかに */
             box-shadow: 0 15px 35px rgba(0,0,0,0.8);
             
-            /* ゲーム画面内のみ、ダブルタップズームやブラウザのスクロール動作を禁止 */
-            touch-action: none;
+            /* ダブルタップズームを抑制しつつ、表示の柔軟性を保つ */
+            touch-action: manipulation;
         }
         
         /* 地面 */
@@ -898,6 +898,21 @@
     updateSkyColor(); 
     updateGaugeUI(); 
 
+    // --- スマホでのピンチズームとダブルタップズームを強制的に禁止する (JS制御) ---
+    document.addEventListener('touchstart', (e) => {
+        if (e.touches.length > 1) {
+            e.preventDefault();
+        }
+    }, { passive: false });
+
+    let lastTouchEnd = 0;
+    document.addEventListener('touchend', (e) => {
+        const now = Date.now();
+        if (now - lastTouchEnd <= 300) {
+            e.preventDefault();
+        }
+        lastTouchEnd = now;
+    }, false);
 </script>
 </body>
 </html>
