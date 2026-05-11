@@ -117,7 +117,7 @@
             z-index: 10;
         }
         
-        /* 野菜アイテム */
+        /* おやさい */
         .veggie {
             width: 50px;
             height: 50px;
@@ -167,7 +167,7 @@
         }
         #pause-btn:hover { background: rgba(0, 0, 0, 0.7); }
 
-        /* 野菜ゲージ (無敵用) - 中央に配置 */
+        /* おやさいゲージ (無敵用) - 中央に配置 */
         #veggie-gauge {
             position: absolute;
             top: 15px;
@@ -244,6 +244,18 @@
             transition: all 0.1s ease-out;
         }
 
+        /* プレイヤーがミスした時の吹っ飛びアニメーション */
+        .player-die {
+            animation: playerDie 0.5s ease-out forwards !important;
+            transition: none !important;
+            z-index: 99 !important;
+        }
+
+        @keyframes playerDie {
+            0% { transform: translate(0, 0) rotate(15deg); opacity: 1; }
+            100% { transform: translate(-100px, -200px) rotate(375deg); opacity: 0; }
+        }
+
         /* オーバーレイ (スタート画面・ゲームオーバー画面・ポーズ画面) */
         .overlay {
             position: absolute;
@@ -299,7 +311,7 @@
         <button id="pause-btn">⏸</button>
         <div id="score">Score: 0</div>
         
-        <!-- 野菜ゲージ -->
+        <!-- おやさいゲージ -->
         <div id="veggie-gauge">
             <div class="slot" id="slot-0"></div>
             <div class="slot" id="slot-1"></div>
@@ -379,7 +391,7 @@
         CLOUD_IMAGES.push(`placeholder-cloud${i}.png`);
     }
 
-    // 野菜アイテムの設定
+    // おやさいラインナップ
     const getEmojiSvg = (emoji) => `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text x="50%" y="50%" dominant-baseline="central" text-anchor="middle" font-size="80">${emoji}</text></svg>`;
     const VEGGIES_CONFIG = [
         { name: 'eggplant', emoji: '🍆' },
@@ -493,6 +505,7 @@
         vegetableCount = 0;
         invincibleTimer = 0;
         player.classList.remove('invincible');
+        player.classList.remove('player-die'); // 吹っ飛び演出をリセット
         updateGaugeUI();
         
         veggieGauge.style.display = 'flex';
@@ -740,7 +753,7 @@
         // --- 障害物の更新 ---
         spawnTimer--;
         if (spawnTimer <= 0) {
-            // 野菜と被らないかチェック（最低150pxの隙間を確保）
+            // おやさいと被らないかチェック（最低150pxの隙間を確保）
             let canSpawn = true;
             for (let item of items) {
                 if (parseFloat(item.dataset.x) > game.clientWidth - 150) {
@@ -781,14 +794,21 @@
             obs.style.left = x + "px";
 
             const obsRect = obs.getBoundingClientRect();
-            if (checkCollision(playerRect, obsRect)) {
+            // 当たり判定を画像より一回り（15px）小さくして、ギリギリ避けられるように調整
+            if (checkCollision(playerRect, obsRect, 15)) {
                 if (invincibleTimer > 0) {
                     obs.classList.add('blown-away');
                     setTimeout(() => obs.remove(), 500); 
                     obstacles.splice(i, 1);
                     score += 10; 
                 } else {
-                    gameOver();
+                    // ミス演出開始
+                    gameState = 'DYING';
+                    player.classList.add('player-die');
+                    
+                    setTimeout(() => {
+                        gameOver();
+                    }, 500);
                     return; 
                 }
             } else if (x + 80 < 0) {
@@ -797,7 +817,7 @@
             }
         }
 
-        // --- 野菜アイテムの更新 ---
+        // --- おやさいの更新 ---
         itemSpawnTimer--;
         if (itemSpawnTimer <= 0) {
             // 障害物と被らないかチェック（最低150pxの隙間を確保）
