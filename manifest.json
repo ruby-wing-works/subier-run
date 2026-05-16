@@ -1,0 +1,16 @@
+{
+  "name": "はしれ！スービエ",
+  "short_name": "おやさい",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#1F4E79",
+  "theme_color": "#1F4E79",
+  "icons": [
+    {
+      "src": "android_icon.png",
+      "sizes": "192x192 512x512 any",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
